@@ -76,7 +76,7 @@ def main() -> int:
             columns=[COL_DATE, COL_TIME, COL_TIMEZONE, COL_CONSISTENCY, COL_NOTES],
         )
         df_pivot_amount = pd.pivot_table(
-            df_feed, values=COL_AMOUNT, index=[COL_DATE], aggfunc=np.sum
+            df_feed, values=COL_AMOUNT, index=[COL_DATE], aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]}
         )
         df_pivot_amount_notes = pd.pivot_table(
             df_feed,
