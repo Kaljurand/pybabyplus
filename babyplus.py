@@ -17,6 +17,7 @@ import json
 import sys
 import pandas as pd
 import numpy as np
+import ontology as ont
 
 FILE_JSON = "babyplus_data_export.json"
 FILE_XLSX = "babyplus_data_export.xlsx"
@@ -27,7 +28,9 @@ COL_TIMEZONE = "Timezone"
 COL_DATETIME = "DateTime"
 COL_AMOUNT = "Amount"
 COL_CONSISTENCY = "Consistency"
-COL_NOTES = "Notes"
+COL_BOTTLE = "Bottle"
+COL_FOOD = "Food"
+COL_SHIT = "Shit"
 
 
 def gen_feed(data, notes={}):
@@ -40,7 +43,18 @@ def gen_feed(data, notes={}):
         # TODO: use proper date parser
         datetime, timezone = date.split("+")
         date, time = datetime.split("T")
-        yield date, time, timezone, dct.get("amountML"), notes.get(dct.get("pk"))
+        # TODO: cleanup
+        bottle = None
+        food = None
+        lst = notes.get(dct.get("pk"), set())
+        for item in lst:
+            if isinstance(item, ont.F):
+                food = item.__str__()
+            elif isinstance(item, ont.B):
+                bottle = item.__str__()
+            else:
+                print(f"ERROR: feed: {item}")
+        yield date, time, timezone, dct.get("amountML"), bottle, food
 
 
 def gen_nappy(data, notes={}):
@@ -53,7 +67,15 @@ def gen_nappy(data, notes={}):
         # TODO: use proper date parser
         datetime, timezone = date.split("+")
         date, time = datetime.split("T")
-        yield date, time, timezone, dct.get("details"), notes.get(dct.get("pk"))
+        # TODO: clean up
+        shit = None
+        lst = notes.get(dct.get("pk"), set())
+        for item in lst:
+            if isinstance(item, ont.S):
+                shit = item.__str__()
+            else:
+                print(f"ERROR: nappy: {item}")
+        yield date, time, timezone, dct.get("details"), shit
 
 
 def main() -> int:
@@ -65,24 +87,34 @@ def main() -> int:
         for dct in data["tracker_detail"]:
             key = dct.get("a")
             val = dct.get("b")
-            notes[key] = val
+            notes[key] = ont.gen_tag(val)
 
         df_feed = pd.DataFrame(
             gen_feed(data["baby_bottlefeed"], notes),
-            columns=[COL_DATE, COL_TIME, COL_TIMEZONE, COL_AMOUNT, COL_NOTES],
+            columns=[
+                COL_DATE,
+                COL_TIME,
+                COL_TIMEZONE,
+                COL_AMOUNT,
+                COL_BOTTLE,
+                COL_FOOD,
+            ],
         )
         df_nappy = pd.DataFrame(
             gen_nappy(data["baby_nappy"], notes),
-            columns=[COL_DATE, COL_TIME, COL_TIMEZONE, COL_CONSISTENCY, COL_NOTES],
+            columns=[COL_DATE, COL_TIME, COL_TIMEZONE, COL_CONSISTENCY, COL_SHIT],
         )
         df_pivot_amount = pd.pivot_table(
-            df_feed, values=COL_AMOUNT, index=[COL_DATE], aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]}
+            df_feed,
+            values=COL_AMOUNT,
+            index=[COL_DATE],
+            aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]},
         )
         df_pivot_amount_notes = pd.pivot_table(
             df_feed,
             values=COL_AMOUNT,
             index=[COL_DATE],
-            columns=[COL_NOTES],
+            columns=[COL_BOTTLE, COL_FOOD],
             aggfunc=np.sum,
         )
         df_pivot_consistency = pd.pivot_table(
