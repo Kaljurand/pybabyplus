@@ -43,6 +43,7 @@ lookup_tag = dict(
     b0=F("b0", 0, "Beba Pre"),
     bp=F("b0", 0, "Beba Pre"),
     bs0=F("bs0", 0, "Beba Supreme Pre"),
+    bseha0=F("bseha0", 0, "Beba Supreme Pre + Beba Expert HA Pre"),
     # Shit
     mustard=S("mustard", "Mustard"),
     dgreen=S("dgreen", "Dark Green"),
