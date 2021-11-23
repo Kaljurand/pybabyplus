@@ -37,11 +37,13 @@ class S:
     def __str__(self):
         return self.pp
 
+rename_tag = dict(
+    bp="b0",
+)
 
 lookup_tag = dict(
     # Food
     b0=F("b0", 0, "Beba Pre"),
-    bp=F("b0", 0, "Beba Pre"),
     bs0=F("bs0", 0, "Beba Supreme Pre"),
     bseha0=F("bseha0", 0, "Beba Supreme Pre + Beba Expert HA Pre"),
     # Shit
@@ -58,9 +60,13 @@ lookup_tag = dict(
 
 
 def gen_tag_aux(tags_as_str):
+    """
+    """
     for tag_as_str in tags_as_str.split(";"):
         if tag_as_str:
-            tag = lookup_tag.get(tag_as_str.lower())
+            tag_as_str = tag_as_str.lower()
+            tag_as_str = rename_tag.get(tag_as_str, tag_as_str)
+            tag = lookup_tag.get(tag_as_str)
             if tag:
                 yield tag
             else:
