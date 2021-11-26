@@ -113,11 +113,14 @@ def main() -> int:
                 COL_SHIT,
             ],
         )
+        df_nappy.style.set_properties(**{'background-color': 'red'}, subset=[COL_SHIT])
+
         df_pivot_amount = pd.pivot_table(
             df_feed,
             values=COL_AMOUNT,
             index=[COL_DATE],
             aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]},
+            #margins=True,
         )
         df_pivot_amount_notes = pd.pivot_table(
             df_feed,
@@ -125,18 +128,21 @@ def main() -> int:
             index=[COL_DATE],
             columns=[COL_FOOD, COL_BOTTLE],
             aggfunc=np.sum,
+            margins=True,
         )
         df_pivot_consistency = pd.pivot_table(
-            df_nappy, values=COL_CONSISTENCY, index=[COL_DATE], aggfunc=np.count_nonzero
+            df_nappy, values=COL_CONSISTENCY, index=[COL_DATE], aggfunc=np.count_nonzero,
+            margins=True,
         )
 
-        # df[COL_DATE] = pd.to_datetime(df[COL_DATE])
-        with pd.ExcelWriter(FILE_XLSX) as writer:
-            df_feed.to_excel(writer, sheet_name="Bottlefeed")
-            df_nappy.to_excel(writer, sheet_name="Nappy")
-            df_pivot_amount.to_excel(writer, sheet_name="Pivot Amount")
-            df_pivot_amount_notes.to_excel(writer, sheet_name="Pivot Amount Notes")
-            df_pivot_consistency.to_excel(writer, sheet_name="Pivot Consistency")
+        if True:
+            # df[COL_DATE] = pd.to_datetime(df[COL_DATE])
+            with pd.ExcelWriter(FILE_XLSX) as writer:
+                df_feed.to_excel(writer, sheet_name="Bottlefeed")
+                df_nappy.to_excel(writer, sheet_name="Nappy")
+                df_pivot_amount.to_excel(writer, sheet_name="Pivot Amount")
+                df_pivot_amount_notes.to_excel(writer, sheet_name="Pivot Amount Notes")
+                df_pivot_consistency.to_excel(writer, sheet_name="Pivot Consistency")
 
         if True:
             print(df_nappy)
