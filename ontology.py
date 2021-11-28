@@ -37,9 +37,8 @@ class S:
     def __str__(self):
         return self.pp
 
-rename_tag = dict(
-    bp="b0",
-)
+
+rename_tag = dict(bp="b0")
 
 lookup_tag = dict(
     # Food
