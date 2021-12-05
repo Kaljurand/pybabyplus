@@ -2,14 +2,9 @@
 
 """
 Converts a Baby+ app's data export (babyplus_data_export.json) into a multi-sheet
-Excel feile with various pivot tables and visualizations.
+Excel file with various pivot tables and visualizations.
 
 Work in progress: only does baby_bottlefeed and baby_nappy for the time being.
-
-TODO:
-
-- support tracker_detail
-- plot feed and nappy on the same figure as a sequence of events
 """
 
 import json
@@ -22,10 +17,12 @@ FILE_JSON = "babyplus_data_export.json"
 FILE_XLSX = "babyplus_data_export.xlsx"
 
 COL_TIMESTAMP = "Timestamp"
+COL_SKIP_MIN = "SkipMin"
+COL_ML_PER_SKIP_MIN = "MlPerSkipMin"
 COL_DATE = "Date"
 COL_TIME = "Time"
+COL_WEEK = "Week"
 COL_WEEKDAY = "Weekday"
-COL_DATETIME = "DateTime"
 COL_AMOUNT = "Amount"
 COL_CONSISTENCY = "Consistency"
 COL_BOTTLE = "Bottle"
@@ -51,13 +48,17 @@ class Table:
         return self.df
 
     def show(self):
+        print(f"NAME: {self.id}")
         print(self.df.dtypes)
         print(self.df.head())
         print(self.df.tail())
 
     def plot(self):
-        fig = self.df.plot().get_figure()
-        fig.savefig(f"{self.id}.png")
+        try:
+            fig = self.df.plot().get_figure()
+            fig.savefig(f"{self.id}.png")
+        except OverflowError as err:
+            print(f"ERROR: {self.id}: {err}")
 
     def to_excel(self, writer):
         self.df.to_excel(writer, sheet_name=self.id)
@@ -82,7 +83,7 @@ def gen_feed(data, notes={}):
                 bottle = item.__str__()
             else:
                 print(f"ERROR: feed: {item}")
-        yield timestamp, date, time, timestamp.weekday(), dct.get(
+        yield timestamp, date, time, timestamp.week, timestamp.weekday(), dct.get(
             "amountML"
         ), bottle, food
 
@@ -104,7 +105,7 @@ def gen_nappy(data, notes={}):
                 shit = item.__str__()
             else:
                 print(f"ERROR: nappy: {item}")
-        yield timestamp, date, time, weekday, dct.get("details"), shit
+        yield timestamp, date, time, timestamp.week, weekday, dct.get("details"), shit
 
 
 def main() -> int:
@@ -118,21 +119,30 @@ def main() -> int:
             val = dct.get("b")
             notes[key] = ont.gen_tag(val)
 
-        feed = Table(
-            "Bottlefeed",
-            pd.DataFrame(
-                gen_feed(data["baby_bottlefeed"], notes),
-                columns=[
-                    COL_TIMESTAMP,
-                    COL_DATE,
-                    COL_TIME,
-                    COL_WEEKDAY,
-                    COL_AMOUNT,
-                    COL_BOTTLE,
-                    COL_FOOD,
-                ],
-            ),
+        df_feed = pd.DataFrame(
+            gen_feed(data["baby_bottlefeed"], notes),
+            columns=[
+                COL_TIMESTAMP,
+                COL_DATE,
+                COL_TIME,
+                COL_WEEK,
+                COL_WEEKDAY,
+                COL_AMOUNT,
+                COL_BOTTLE,
+                COL_FOOD,
+            ],
         )
+
+        # Minutes since the previous feeding
+        df_feed[COL_SKIP_MIN] = (
+            df_feed[COL_TIMESTAMP].shift() - df_feed[COL_TIMESTAMP]
+        ).dt.seconds / 60.0
+        # Amount consumed per minute
+        df_feed[COL_ML_PER_SKIP_MIN] = (
+            df_feed[COL_AMOUNT].shift() / df_feed[COL_SKIP_MIN]
+        )
+
+        feed = Table("Bottlefeed", df_feed)
         nappy = Table(
             "Nappy",
             pd.DataFrame(
@@ -141,6 +151,7 @@ def main() -> int:
                     COL_TIMESTAMP,
                     COL_DATE,
                     COL_TIME,
+                    COL_WEEK,
                     COL_WEEKDAY,
                     COL_CONSISTENCY,
                     COL_SHIT,
@@ -160,6 +171,29 @@ def main() -> int:
             ),
         )
 
+        pivot_amount_by_week = Table(
+            "pivot_amount_by_week",
+            pd.pivot_table(
+                feed.as_df(),
+                values=COL_AMOUNT,
+                index=[COL_WEEK],
+                aggfunc={COL_AMOUNT: [np.sum]},
+                # margins=True,
+            ),
+        )
+
+        pivot_amount_by_weekday = Table(
+            "pivot_amount_by_weekday",
+            pd.pivot_table(
+                feed.as_df(),
+                values=COL_AMOUNT,
+                index=[COL_WEEKDAY],
+                aggfunc={COL_AMOUNT: [np.sum]},
+                # margins=True,
+            ),
+        )
+
+        # TODO: group by hour
         pivot_amount_by_time = Table(
             "pivot_amount_by_time",
             pd.pivot_table(
@@ -220,6 +254,8 @@ def main() -> int:
                 feed.to_excel(writer)
                 nappy.to_excel(writer)
                 pivot_amount.to_excel(writer)
+                pivot_amount_by_week.to_excel(writer)
+                pivot_amount_by_weekday.to_excel(writer)
                 pivot_amount_by_time.to_excel(writer)
                 pivot_amount_food.to_excel(writer)
                 pivot_amount_bottle.to_excel(writer)
@@ -230,6 +266,8 @@ def main() -> int:
             feed.show()
             nappy.show()
             pivot_amount.show()
+            pivot_amount_by_week.show()
+            pivot_amount_by_weekday.show()
             pivot_amount_by_time.show()
             pivot_amount_food.show()
             pivot_amount_bottle.show()
@@ -241,6 +279,8 @@ def main() -> int:
             # No numeric data to plot
             # nappy.plot()
             pivot_amount.plot()
+            pivot_amount_by_week.plot()
+            pivot_amount_by_weekday.plot()
             pivot_amount_by_time.plot()
             pivot_amount_food.plot()
             pivot_amount_bottle.plot()
