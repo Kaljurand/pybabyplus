@@ -38,7 +38,10 @@ class S:
         return self.pp
 
 
-rename_tag = dict(bp="b0")
+rename_tag = dict(
+    bp="b0",
+    nuk="nuks"
+    )
 
 lookup_tag = dict(
     # Food
@@ -50,11 +53,13 @@ lookup_tag = dict(
     dgreen=S("dgreen", "Dark Green"),
     lgreen=S("lgreen", "Light Green"),
     # Bottle
-    steri=B("steri", 0, "SteriFeed"),
-    nuk=B("nuk", 1, "Nuk"),
+    steri=B("steri", 0, "SteriFeed"), # TODO: rename to Nuk 0?
+    nuks=B("nuks", 1, "Nuk S"),
+    nukm=B("nukm", 1, "Nuk M"),
     mam=B("mam", 1, "Mam"),
-    avent=B("avent", 1, "Avent"),
-    aventn2=B("aventn2", 2, "Avent Natural"),
+    avent=B("avent", 1, "Avent 1"),
+    avent2=B("avent2", 2, "Avent 2"),
+    aventn2=B("aventn2", 2, "Avent Natural 2"),
 )
 
 
