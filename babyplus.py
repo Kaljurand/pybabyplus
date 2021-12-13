@@ -11,9 +11,9 @@ import json
 import sys
 import pandas as pd
 import numpy as np
+import click
 import ontology as ont
 
-FILE_JSON = "babyplus_data_export.json"
 FILE_XLSX = "babyplus_data_export.xlsx"
 
 COL_TIMESTAMP = "Timestamp"
@@ -108,184 +108,183 @@ def gen_nappy(data, notes={}):
         yield timestamp, date, time, timestamp.week, weekday, dct.get("details"), shit
 
 
-def main() -> int:
+@click.command()
+@click.argument("stream", type=click.File("r"))
+def main(stream) -> int:
     """Main"""
-    with open(FILE_JSON) as stream:
-        data = json.load(stream)
+    data = json.load(stream)
 
-        notes = {}
-        for dct in data["tracker_detail"]:
-            key = dct.get("a")
-            val = dct.get("b")
-            notes[key] = ont.gen_tag(val)
+    notes = {}
+    for dct in data["tracker_detail"]:
+        key = dct.get("a")
+        val = dct.get("b")
+        notes[key] = ont.gen_tag(val)
 
-        df_feed = pd.DataFrame(
-            gen_feed(data["baby_bottlefeed"], notes),
+    df_feed = pd.DataFrame(
+        gen_feed(data["baby_bottlefeed"], notes),
+        columns=[
+            COL_TIMESTAMP,
+            COL_DATE,
+            COL_TIME,
+            COL_WEEK,
+            COL_WEEKDAY,
+            COL_AMOUNT,
+            COL_BOTTLE,
+            COL_FOOD,
+        ],
+    )
+
+    # Minutes since the previous feeding
+    df_feed[COL_SKIP_MIN] = (
+        df_feed[COL_TIMESTAMP].shift() - df_feed[COL_TIMESTAMP]
+    ).dt.seconds / 60.0
+    # Amount consumed per minute
+    df_feed[COL_ML_PER_SKIP_MIN] = df_feed[COL_AMOUNT].shift() / df_feed[COL_SKIP_MIN]
+
+    feed = Table("Bottlefeed", df_feed)
+    nappy = Table(
+        "Nappy",
+        pd.DataFrame(
+            gen_nappy(data["baby_nappy"], notes),
             columns=[
                 COL_TIMESTAMP,
                 COL_DATE,
                 COL_TIME,
                 COL_WEEK,
                 COL_WEEKDAY,
-                COL_AMOUNT,
-                COL_BOTTLE,
-                COL_FOOD,
+                COL_CONSISTENCY,
+                COL_SHIT,
             ],
-        )
+        ),
+    )
+    # nappy.style.set_properties(**{"background-color": "red"}, subset=[COL_SHIT])
 
-        # Minutes since the previous feeding
-        df_feed[COL_SKIP_MIN] = (
-            df_feed[COL_TIMESTAMP].shift() - df_feed[COL_TIMESTAMP]
-        ).dt.seconds / 60.0
-        # Amount consumed per minute
-        df_feed[COL_ML_PER_SKIP_MIN] = (
-            df_feed[COL_AMOUNT].shift() / df_feed[COL_SKIP_MIN]
-        )
+    pivot_amount = Table(
+        "pivot_amount",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_DATE],
+            aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]},
+            # margins=True,
+        ),
+    )
 
-        feed = Table("Bottlefeed", df_feed)
-        nappy = Table(
-            "Nappy",
-            pd.DataFrame(
-                gen_nappy(data["baby_nappy"], notes),
-                columns=[
-                    COL_TIMESTAMP,
-                    COL_DATE,
-                    COL_TIME,
-                    COL_WEEK,
-                    COL_WEEKDAY,
-                    COL_CONSISTENCY,
-                    COL_SHIT,
-                ],
-            ),
-        )
-        # nappy.style.set_properties(**{"background-color": "red"}, subset=[COL_SHIT])
+    pivot_amount_by_week = Table(
+        "pivot_amount_by_week",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_WEEK],
+            aggfunc={COL_AMOUNT: [np.sum]},
+            # margins=True,
+        ),
+    )
 
-        pivot_amount = Table(
-            "pivot_amount",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_DATE],
-                aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]},
-                # margins=True,
-            ),
-        )
+    pivot_amount_by_weekday = Table(
+        "pivot_amount_by_weekday",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_WEEKDAY],
+            aggfunc={COL_AMOUNT: [np.sum]},
+            # margins=True,
+        ),
+    )
 
-        pivot_amount_by_week = Table(
-            "pivot_amount_by_week",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_WEEK],
-                aggfunc={COL_AMOUNT: [np.sum]},
-                # margins=True,
-            ),
-        )
+    # TODO: group by hour
+    pivot_amount_by_time = Table(
+        "pivot_amount_by_time",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_TIME],
+            aggfunc={COL_AMOUNT: [np.sum]},
+            # margins=True,
+        ),
+    )
 
-        pivot_amount_by_weekday = Table(
-            "pivot_amount_by_weekday",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_WEEKDAY],
-                aggfunc={COL_AMOUNT: [np.sum]},
-                # margins=True,
-            ),
-        )
+    pivot_amount_food = Table(
+        "pivot_amount_food",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_DATE],
+            columns=[COL_FOOD],
+            aggfunc=np.sum,
+            margins=True,
+        ),
+    )
+    pivot_amount_bottle = Table(
+        "pivot_amount_bottle",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_DATE],
+            columns=[COL_BOTTLE],
+            aggfunc=np.sum,
+            margins=True,
+        ),
+    )
+    pivot_amount_food_bottle = Table(
+        "pivot_amount_food_bottle",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_DATE],
+            columns=[COL_FOOD, COL_BOTTLE],
+            aggfunc=np.sum,
+            margins=True,
+        ),
+    )
+    pivot_consistency = Table(
+        "pivot_consistency",
+        pd.pivot_table(
+            nappy.as_df(),
+            values=COL_CONSISTENCY,
+            index=[COL_DATE],
+            aggfunc=np.count_nonzero,
+            margins=True,
+        ),
+    )
 
-        # TODO: group by hour
-        pivot_amount_by_time = Table(
-            "pivot_amount_by_time",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_TIME],
-                aggfunc={COL_AMOUNT: [np.sum]},
-                # margins=True,
-            ),
-        )
+    if is_excel:
+        with pd.ExcelWriter(FILE_XLSX) as writer:
+            feed.to_excel(writer)
+            nappy.to_excel(writer)
+            pivot_amount.to_excel(writer)
+            pivot_amount_by_week.to_excel(writer)
+            pivot_amount_by_weekday.to_excel(writer)
+            pivot_amount_by_time.to_excel(writer)
+            pivot_amount_food.to_excel(writer)
+            pivot_amount_bottle.to_excel(writer)
+            pivot_amount_food_bottle.to_excel(writer)
+            pivot_consistency.to_excel(writer)
 
-        pivot_amount_food = Table(
-            "pivot_amount_food",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_DATE],
-                columns=[COL_FOOD],
-                aggfunc=np.sum,
-                margins=True,
-            ),
-        )
-        pivot_amount_bottle = Table(
-            "pivot_amount_bottle",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_DATE],
-                columns=[COL_BOTTLE],
-                aggfunc=np.sum,
-                margins=True,
-            ),
-        )
-        pivot_amount_food_bottle = Table(
-            "pivot_amount_food_bottle",
-            pd.pivot_table(
-                feed.as_df(),
-                values=COL_AMOUNT,
-                index=[COL_DATE],
-                columns=[COL_FOOD, COL_BOTTLE],
-                aggfunc=np.sum,
-                margins=True,
-            ),
-        )
-        pivot_consistency = Table(
-            "pivot_consistency",
-            pd.pivot_table(
-                nappy.as_df(),
-                values=COL_CONSISTENCY,
-                index=[COL_DATE],
-                aggfunc=np.count_nonzero,
-                margins=True,
-            ),
-        )
+    if is_plain:
+        feed.show()
+        nappy.show()
+        pivot_amount.show()
+        pivot_amount_by_week.show()
+        pivot_amount_by_weekday.show()
+        pivot_amount_by_time.show()
+        pivot_amount_food.show()
+        pivot_amount_bottle.show()
+        pivot_amount_food_bottle.show()
+        pivot_consistency.show()
 
-        if is_excel:
-            with pd.ExcelWriter(FILE_XLSX) as writer:
-                feed.to_excel(writer)
-                nappy.to_excel(writer)
-                pivot_amount.to_excel(writer)
-                pivot_amount_by_week.to_excel(writer)
-                pivot_amount_by_weekday.to_excel(writer)
-                pivot_amount_by_time.to_excel(writer)
-                pivot_amount_food.to_excel(writer)
-                pivot_amount_bottle.to_excel(writer)
-                pivot_amount_food_bottle.to_excel(writer)
-                pivot_consistency.to_excel(writer)
-
-        if is_plain:
-            feed.show()
-            nappy.show()
-            pivot_amount.show()
-            pivot_amount_by_week.show()
-            pivot_amount_by_weekday.show()
-            pivot_amount_by_time.show()
-            pivot_amount_food.show()
-            pivot_amount_bottle.show()
-            pivot_amount_food_bottle.show()
-            pivot_consistency.show()
-
-        if is_plots:
-            feed.plot()
-            # No numeric data to plot
-            # nappy.plot()
-            pivot_amount.plot()
-            pivot_amount_by_week.plot()
-            pivot_amount_by_weekday.plot()
-            pivot_amount_by_time.plot()
-            pivot_amount_food.plot()
-            pivot_amount_bottle.plot()
-            pivot_amount_food_bottle.plot()
-            pivot_consistency.plot()
+    if is_plots:
+        feed.plot()
+        # No numeric data to plot
+        # nappy.plot()
+        pivot_amount.plot()
+        pivot_amount_by_week.plot()
+        pivot_amount_by_weekday.plot()
+        pivot_amount_by_time.plot()
+        pivot_amount_food.plot()
+        pivot_amount_bottle.plot()
+        pivot_amount_food_bottle.plot()
+        pivot_consistency.plot()
 
     return 0
 
