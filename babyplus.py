@@ -165,18 +165,29 @@ def main(stream) -> int:
             feed.as_df(),
             values=COL_AMOUNT,
             index=[COL_DATE],
-            aggfunc={COL_AMOUNT: [np.sum, np.count_nonzero]},
+            aggfunc={COL_AMOUNT: [np.sum, np.max, np.count_nonzero]},
             # margins=True,
         ),
     )
 
     pivot_amount_by_week = Table(
-        "pivot_amount_by_week",
+        "pivot_amount_sum_by_week",
         pd.pivot_table(
             feed.as_df(),
             values=COL_AMOUNT,
             index=[COL_WEEK],
-            aggfunc={COL_AMOUNT: [np.sum]},
+            aggfunc={COL_AMOUNT: [np.sum, np.max]},
+            # margins=True,
+        ),
+    )
+
+    pivot_amount_max_by_week = Table(
+        "pivot_amount_max_by_week",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            index=[COL_WEEK],
+            aggfunc={COL_AMOUNT: [np.max]},
             # margins=True,
         ),
     )
@@ -248,43 +259,33 @@ def main(stream) -> int:
         ),
     )
 
+    tables = [
+        feed,
+        nappy,
+        pivot_amount,
+        pivot_amount_by_week,
+        pivot_amount_max_by_week,
+        pivot_amount_by_weekday,
+        pivot_amount_by_time,
+        pivot_amount_food,
+        pivot_amount_bottle,
+        pivot_amount_food_bottle,
+        pivot_consistency,
+    ]
+
     if is_excel:
         with pd.ExcelWriter(FILE_XLSX) as writer:
-            feed.to_excel(writer)
-            nappy.to_excel(writer)
-            pivot_amount.to_excel(writer)
-            pivot_amount_by_week.to_excel(writer)
-            pivot_amount_by_weekday.to_excel(writer)
-            pivot_amount_by_time.to_excel(writer)
-            pivot_amount_food.to_excel(writer)
-            pivot_amount_bottle.to_excel(writer)
-            pivot_amount_food_bottle.to_excel(writer)
-            pivot_consistency.to_excel(writer)
+            for df in tables:
+                df.to_excel(writer)
 
     if is_plain:
-        feed.show()
-        nappy.show()
-        pivot_amount.show()
-        pivot_amount_by_week.show()
-        pivot_amount_by_weekday.show()
-        pivot_amount_by_time.show()
-        pivot_amount_food.show()
-        pivot_amount_bottle.show()
-        pivot_amount_food_bottle.show()
-        pivot_consistency.show()
+        for df in tables:
+            df.show()
 
     if is_plots:
-        feed.plot()
-        # No numeric data to plot
-        # nappy.plot()
-        pivot_amount.plot()
-        pivot_amount_by_week.plot()
-        pivot_amount_by_weekday.plot()
-        pivot_amount_by_time.plot()
-        pivot_amount_food.plot()
-        pivot_amount_bottle.plot()
-        pivot_amount_food_bottle.plot()
-        pivot_consistency.plot()
+        for df in tables:
+            df.plot()
+            # nappy: No numeric data to plot
 
     return 0
 
