@@ -1,0 +1,187 @@
+ERROR: feed: ?
+ERROR: feed: Mustard
+ERROR: feed: Mustard
+NAME: Bottlefeed
+Timestamp       datetime64[ns]
+Date                    object
+Time                    object
+Week                     int64
+Weekday                  int64
+Amount                   int64
+Bottle                  object
+Food                    object
+SkipMin                float64
+MlPerSkipMin           float64
+dtype: object
+                Timestamp        Date  ...     SkipMin  MlPerSkipMin
+0 2021-12-20 20:15:00.000  2021-12-20  ...         NaN           NaN
+1 2021-12-20 10:53:25.594  2021-12-20  ...  561.566667      0.089037
+2 2021-12-19 20:50:00.000  2021-12-19  ...  843.416667      0.231202
+3 2021-12-11 13:43:40.663  2021-12-11  ...  426.316667      0.351851
+4 2021-12-11 12:58:00.000  2021-12-11  ...   45.666667      1.094891
+
+[5 rows x 10 columns]
+                Timestamp        Date  ...     SkipMin  MlPerSkipMin
+0 2021-12-20 20:15:00.000  2021-12-20  ...         NaN           NaN
+1 2021-12-20 10:53:25.594  2021-12-20  ...  561.566667      0.089037
+2 2021-12-19 20:50:00.000  2021-12-19  ...  843.416667      0.231202
+3 2021-12-11 13:43:40.663  2021-12-11  ...  426.316667      0.351851
+4 2021-12-11 12:58:00.000  2021-12-11  ...   45.666667      1.094891
+
+[5 rows x 10 columns]
+NAME: Nappy
+Timestamp      datetime64[ns]
+Date                   object
+Time                   object
+Week                    int64
+Weekday                 int64
+Consistency            object
+Shit                   object
+dtype: object
+                Timestamp        Date  ... Consistency     Shit
+0 2021-12-20 11:01:36.282  2021-12-20  ...        Soft  Mustard
+1 2021-12-11 12:59:27.272  2021-12-11  ...       Loose  Mustard
+
+[2 rows x 7 columns]
+                Timestamp        Date  ... Consistency     Shit
+0 2021-12-20 11:01:36.282  2021-12-20  ...        Soft  Mustard
+1 2021-12-11 12:59:27.272  2021-12-11  ...       Loose  Mustard
+
+[2 rows x 7 columns]
+NAME: pivot_amount
+amax             int64
+count_nonzero    int64
+sum              int64
+dtype: object
+            amax  count_nonzero  sum
+Date                                
+2021-12-11   100              2  150
+2021-12-19   150              1  150
+2021-12-20   195              2  245
+            amax  count_nonzero  sum
+Date                                
+2021-12-11   100              2  150
+2021-12-19   150              1  150
+2021-12-20   195              2  245
+NAME: pivot_amount_sum_by_week
+amax    int64
+sum     int64
+dtype: object
+      amax  sum
+Week           
+49     100  150
+50     150  150
+51     195  245
+      amax  sum
+Week           
+49     100  150
+50     150  150
+51     195  245
+NAME: pivot_amount_max_by_week
+amax    int64
+dtype: object
+      amax
+Week      
+49     100
+50     150
+51     195
+      amax
+Week      
+49     100
+50     150
+51     195
+NAME: pivot_amount_by_weekday
+sum    int64
+dtype: object
+         sum
+Weekday     
+0        245
+5        150
+6        150
+         sum
+Weekday     
+0        245
+5        150
+6        150
+NAME: pivot_amount_by_time
+sum    int64
+dtype: object
+                 sum
+Time                
+10:53:25.594000  195
+12:58:00         100
+13:43:40.663000   50
+20:15:00          50
+20:50:00         150
+                 sum
+Time                
+10:53:25.594000  195
+12:58:00         100
+13:43:40.663000   50
+20:15:00          50
+20:50:00         150
+NAME: pivot_amount_food
+Food
+Beba Opti Pro 1    float64
+Beba Pre           float64
+All                  int64
+dtype: object
+Food        Beba Opti Pro 1  Beba Pre  All
+Date                                      
+2021-12-19              NaN     150.0  150
+2021-12-20            245.0       NaN  245
+All                   245.0     150.0  395
+Food        Beba Opti Pro 1  Beba Pre  All
+Date                                      
+2021-12-19              NaN     150.0  150
+2021-12-20            245.0       NaN  245
+All                   245.0     150.0  395
+NAME: pivot_amount_bottle
+Bottle
+Avent Natural 2    float64
+Mam                float64
+Nuk0               float64
+All                  int64
+dtype: object
+Bottle      Avent Natural 2    Mam  Nuk0  All
+Date                                         
+2021-12-19              NaN  150.0   NaN  150
+2021-12-20            195.0    NaN  50.0  245
+All                   195.0  150.0  50.0  395
+Bottle      Avent Natural 2    Mam  Nuk0  All
+Date                                         
+2021-12-19              NaN  150.0   NaN  150
+2021-12-20            195.0    NaN  50.0  245
+All                   195.0  150.0  50.0  395
+NAME: pivot_amount_food_bottle
+Food             Bottle         
+Beba Opti Pro 1  Avent Natural 2    float64
+                 Nuk0               float64
+Beba Pre         Mam                float64
+All                                   int64
+dtype: object
+Food       Beba Opti Pro 1       Beba Pre  All
+Bottle     Avent Natural 2  Nuk0      Mam     
+Date                                          
+2021-12-19             NaN   NaN    150.0  150
+2021-12-20           195.0  50.0      NaN  245
+All                  195.0  50.0    150.0  395
+Food       Beba Opti Pro 1       Beba Pre  All
+Bottle     Avent Natural 2  Nuk0      Mam     
+Date                                          
+2021-12-19             NaN   NaN    150.0  150
+2021-12-20           195.0  50.0      NaN  245
+All                  195.0  50.0    150.0  395
+NAME: pivot_consistency
+Consistency    int64
+dtype: object
+            Consistency
+Date                   
+2021-12-11            1
+2021-12-20            1
+All                   2
+            Consistency
+Date                   
+2021-12-11            1
+2021-12-20            1
+All                   2
