@@ -175,13 +175,21 @@ All                  195.0  50.0    150.0  395
 NAME: pivot_consistency
 Consistency    int64
 dtype: object
-            Consistency
-Date                   
-2021-12-11            1
-2021-12-20            1
-All                   2
-            Consistency
-Date                   
-2021-12-11            1
-2021-12-20            1
-All                   2
+      Consistency
+Week             
+49              1
+51              1
+All             2
+      Consistency
+Week             
+49              1
+51              1
+All             2
+ERROR: Bottlefeed: "['All'] not found in axis"
+ERROR: Nappy: "['All'] not found in axis"
+ERROR: pivot_amount: "['All'] not found in axis"
+ERROR: pivot_amount_sum_by_week: "['All'] not found in axis"
+ERROR: pivot_amount_max_by_week: "['All'] not found in axis"
+ERROR: pivot_amount_by_weekday: "['All'] not found in axis"
+ERROR: pivot_amount_by_time: "['All'] not found in axis"
+ERROR: pivot_consistency: "['All'] not found in axis"

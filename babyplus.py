@@ -55,8 +55,11 @@ class Table:
 
     def plot(self):
         try:
-            fig = self.df.plot().get_figure()
+            df_without_margins = self.df.drop(index="All", columns="All")
+            fig = df_without_margins.plot().get_figure()
             fig.savefig(f"{self.id}.png")
+        except KeyError as err:
+            print(f"ERROR: {self.id}: {err}")
         except OverflowError as err:
             print(f"ERROR: {self.id}: {err}")
 
@@ -226,6 +229,7 @@ def main(stream) -> int:
             margins=True,
         ),
     )
+
     pivot_amount_bottle = Table(
         "pivot_amount_bottle",
         pd.pivot_table(
@@ -253,7 +257,7 @@ def main(stream) -> int:
         pd.pivot_table(
             nappy.as_df(),
             values=COL_CONSISTENCY,
-            index=[COL_DATE],
+            index=[COL_WEEK],
             aggfunc=np.count_nonzero,
             margins=True,
         ),
