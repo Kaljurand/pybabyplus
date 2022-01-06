@@ -55,11 +55,9 @@ class Table:
 
     def plot(self):
         try:
-            df_without_margins = self.df.drop(index="All", columns="All")
+            df_without_margins = self.df.drop(index="All", columns="All", errors="ignore")
             fig = df_without_margins.plot().get_figure()
             fig.savefig(f"{self.id}.png")
-        except KeyError as err:
-            print(f"ERROR: {self.id}: {err}")
         except OverflowError as err:
             print(f"ERROR: {self.id}: {err}")
 
