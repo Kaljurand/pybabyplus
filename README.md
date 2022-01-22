@@ -6,6 +6,7 @@ into a multi-sheet Excel file with various pivot tables, visualizations, etc.
 
 # TODO
 
+- cluster feedings that occur close to each other, by summing the quantity, and dropping the (possibly different) bottles
 - map Ontology and the tag parser to Kõnele rewrite rules
 - integrate reference charts (growth, Beba Pre food intake, etc.)
 - color table cells based on Ontology
@@ -18,3 +19,5 @@ into a multi-sheet Excel file with various pivot tables, visualizations, etc.
 - duration between shits
 - event stream of cumulative food intake, that is zerod by the eventual shit
   (color-coded by the color of shit)
+- weekly summary: growth values, amount of milk, number of shits, vaccines and milestones
+- average quantity per meal
