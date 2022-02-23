@@ -193,13 +193,24 @@ def main(stream) -> int:
         ),
     )
 
+    pivot_skipmin = Table(
+        "pivot_skipmin",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_SKIP_MIN,
+            index=[COL_DATE],
+            aggfunc={COL_SKIP_MIN: [np.mean, np.average, np.max]},
+            # margins=True,
+        ),
+    )
+
     pivot_amount_by_weekday = Table(
         "pivot_amount_by_weekday",
         pd.pivot_table(
             feed.as_df(),
             values=COL_AMOUNT,
             index=[COL_WEEKDAY],
-            aggfunc={COL_AMOUNT: [np.sum]},
+            aggfunc={COL_AMOUNT: [np.sum, np.max]},
             # margins=True,
         ),
     )
@@ -266,6 +277,7 @@ def main(stream) -> int:
         nappy,
         pivot_amount,
         pivot_amount_by_week,
+        pivot_skipmin,
         pivot_amount_max_by_week,
         pivot_amount_by_weekday,
         pivot_amount_by_time,
