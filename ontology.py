@@ -43,6 +43,7 @@ rename_tag = dict(bp="b0", nuk="nuks", steri="nuk0")
 lookup_tag = dict(
     # Food
     b0=F("b0", 0, "Beba Pre"),
+    b01=F("b01", 0.5, "Beba Pre + Beba 1"),
     bop1=F("bop1", 1, "Beba Opti Pro 1"),
     bs0=F("bs0", 0, "Beba Supreme Pre"),
     bseha0=F("bseha0", 0, "Beba Supreme Pre + Beba Expert HA Pre"),
@@ -55,6 +56,7 @@ lookup_tag = dict(
     nuks=B("nuks", 1, "Nuk S"),
     nukm=B("nukm", 1, "Nuk M"),
     mam=B("mam", 1, "Mam"),
+    mam2=B("mam2", 2, "Mam 2"),
     avent=B("avent", 1, "Avent 1"),
     avent2=B("avent2", 2, "Avent 2"),
     aventn2=B("aventn2", 2, "Avent Natural 2"),

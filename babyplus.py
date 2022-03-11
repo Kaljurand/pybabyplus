@@ -9,9 +9,11 @@ Work in progress: only does baby_bottlefeed and baby_nappy for the time being.
 
 import json
 import sys
-import pandas as pd
-import numpy as np
+
 import click
+import numpy as np
+import pandas as pd
+
 import ontology as ont
 
 FILE_XLSX = "babyplus_data_export.xlsx"
@@ -55,8 +57,12 @@ class Table:
 
     def plot(self):
         try:
-            df_without_margins = self.df.drop(index="All", columns="All", errors="ignore")
-            fig = df_without_margins.plot(subplots=True, grid=True, sharex=True, kind="line")
+            df_without_margins = self.df.drop(
+                index="All", columns="All", errors="ignore"
+            )
+            fig = df_without_margins.plot(
+                subplots=True, grid=True, sharex=True, kind="line"
+            )
             fig[0].get_figure().savefig(f"{self.id}.png")
         except OverflowError as err:
             print(f"ERROR: {self.id}: {err}")
