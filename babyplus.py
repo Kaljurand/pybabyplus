@@ -23,6 +23,7 @@ COL_SKIP_MIN = "SkipMin"
 COL_ML_PER_SKIP_MIN = "MlPerSkipMin"
 COL_DATE = "Date"
 COL_TIME = "Time"
+COL_YEAR = "Year"
 COL_WEEK = "Week"
 COL_WEEKDAY = "Weekday"
 COL_AMOUNT = "Amount"
@@ -90,7 +91,7 @@ def gen_feed(data, notes={}):
                 bottle = item.__str__()
             else:
                 print(f"ERROR: feed: {item}")
-        yield timestamp, date, time, timestamp.week, timestamp.weekday(), dct.get(
+        yield timestamp, date, time, timestamp.year, timestamp.week, timestamp.weekday(), dct.get(
             "amountML"
         ), bottle, food
 
@@ -112,7 +113,7 @@ def gen_nappy(data, notes={}):
                 shit = item.__str__()
             else:
                 print(f"ERROR: nappy: {item}")
-        yield timestamp, date, time, timestamp.week, weekday, dct.get("details"), shit
+        yield timestamp, date, time, timestamp.year, timestamp.week, weekday, dct.get("details"), shit
 
 
 @click.command()
@@ -133,6 +134,7 @@ def main(stream) -> int:
             COL_TIMESTAMP,
             COL_DATE,
             COL_TIME,
+            COL_YEAR,
             COL_WEEK,
             COL_WEEKDAY,
             COL_AMOUNT,
@@ -157,6 +159,7 @@ def main(stream) -> int:
                 COL_TIMESTAMP,
                 COL_DATE,
                 COL_TIME,
+                COL_YEAR,
                 COL_WEEK,
                 COL_WEEKDAY,
                 COL_CONSISTENCY,
@@ -182,7 +185,7 @@ def main(stream) -> int:
         pd.pivot_table(
             feed.as_df(),
             values=COL_AMOUNT,
-            index=[COL_WEEK],
+            index=[COL_YEAR, COL_WEEK],
             aggfunc={COL_AMOUNT: [np.sum, np.max]},
             # margins=True,
         ),
@@ -193,7 +196,7 @@ def main(stream) -> int:
         pd.pivot_table(
             feed.as_df(),
             values=COL_AMOUNT,
-            index=[COL_WEEK],
+            index=[COL_YEAR, COL_WEEK],
             aggfunc={COL_AMOUNT: [np.max]},
             # margins=True,
         ),
@@ -272,7 +275,7 @@ def main(stream) -> int:
         pd.pivot_table(
             nappy.as_df(),
             values=COL_CONSISTENCY,
-            index=[COL_WEEK],
+            index=[COL_YEAR, COL_WEEK],
             aggfunc=np.count_nonzero,
             margins=True,
         ),
