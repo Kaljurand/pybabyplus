@@ -10,7 +10,9 @@ into a multi-sheet Excel file with various pivot tables, visualizations, etc.
 - map Ontology and the tag parser to Kõnele rewrite rules
 - integrate reference charts (growth, Beba Pre food intake, etc.)
 - color table cells based on Ontology
-- group time into 24 buckets
+- make a plot for every (year, month), to demonstrate how
+  eating has become less and less uniformly distributed
+- DONE: group time into 24 buckets
 - DONE: dont plot "All" on the same figure as individual samples
 
 ## Plots

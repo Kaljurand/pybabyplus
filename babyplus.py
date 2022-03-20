@@ -25,6 +25,7 @@ COL_DATE = "Date"
 COL_TIME = "Time"
 COL_YEAR = "Year"
 COL_WEEK = "Week"
+COL_HOUR = "Hour"
 COL_WEEKDAY = "Weekday"
 COL_AMOUNT = "Amount"
 COL_CONSISTENCY = "Consistency"
@@ -91,7 +92,7 @@ def gen_feed(data, notes={}):
                 bottle = item.__str__()
             else:
                 print(f"ERROR: feed: {item}")
-        yield timestamp, date, time, timestamp.year, timestamp.week, timestamp.weekday(), dct.get(
+        yield timestamp, date, time, timestamp.year, timestamp.week, timestamp.hour, timestamp.weekday(), dct.get(
             "amountML"
         ), bottle, food
 
@@ -136,6 +137,7 @@ def main(stream) -> int:
             COL_TIME,
             COL_YEAR,
             COL_WEEK,
+            COL_HOUR,
             COL_WEEKDAY,
             COL_AMOUNT,
             COL_BOTTLE,
@@ -224,6 +226,20 @@ def main(stream) -> int:
         ),
     )
 
+    # TODO: make a plot for every (year, month), to demonstrate how
+    # eating has become less and less uniformly distributed
+    pivot_amount_by_hour = Table(
+        "pivot_amount_by_hour",
+        pd.pivot_table(
+            feed.as_df(),
+            values=COL_AMOUNT,
+            #index=[COL_YEAR, COL_WEEK, COL_HOUR],
+            index=[COL_HOUR],
+            aggfunc={COL_AMOUNT: [np.sum, np.max, np.mean, np.count_nonzero]},
+            # margins=True,
+        ),
+    )
+
     # TODO: group by hour
     pivot_amount_by_time = Table(
         "pivot_amount_by_time",
@@ -289,6 +305,7 @@ def main(stream) -> int:
         pivot_skipmin,
         pivot_amount_max_by_week,
         pivot_amount_by_weekday,
+        pivot_amount_by_hour,
         pivot_amount_by_time,
         pivot_amount_food,
         pivot_amount_bottle,
